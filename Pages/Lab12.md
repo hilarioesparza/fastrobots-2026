@@ -12,11 +12,265 @@ For the final lab of this course, students had the option of either navigating t
 
 In order to control the car, I decided to use a linear quadratic regulator (LQR) to determine what control gains would be needed to optimally maintain the car’s upright position. To do this, I needed to model the system dynamics of the car, linearize this model about the point of interest, discretize the continuous model, and then finally use Python to solve the Ricatti Equation to derive the optimal gain K.
 
+#### Lagrangian Background
+
+To develop a mathematical model of the car’s dynamics, it is necessary to start from a force balance equation and work backwards from there to see how the input affects the various states of the car. This, however, can be quite difficult for complex systems, and it is easier to use Lagrangian Mechanics as opposed to Newtonian Mechanics.
+
+Lagrangian Mechanics states that the lagrangian, $$L$$, is equal to the kinetic energy $$K$$ minus the potential energy $$P$$. 
+
+$$
+L = K - P
+$$
+
+Once we know $$L$$, we can use the following relationship to determine how the inputs into the system affect its states:
+
+$$
+\frac{d}{dt}(\frac{\partial L}{\partial\dot{q}_i}) - \frac{\partial L}{\partial q_i} = Q_i
+$$
+
+Where $$q_i$$ represents one of the states of the system, and $$Q_i$$ represents the force affecting state $$q_i$$. To use this, therefore, we need to determine what $$K$$ and $$P$$ are.
+
 #### Mathematical Model
 
-$$ 
-\\sum_{i=1}^n X_i 
+I will use the following diagram (borrowed from lecture material) to represent the inverted pendulum system. The only change I will make is that the offset of $$\pi$$ will be an offset of $$\pi/2$$ in my system.
+
+**INSERT PHOTO**
+
+Here, $$M$$ is the mass of the lower portion of the pendulum, $$m$$ is the mass of the upper portion, $$l$$ is the length between them, $$\delta$$ is the drage due to friction, $$u$$ is the PWM input into the bottom wheels, $$\theta$$ is the pitch of the car relative to the ground, and $$x$$ is its distance from a wall.
+
+From this, we have the following state representation.
+
 $$
+y =
+\begin{bmatrix}
+x \\
+\dot{x} \\
+\theta \\
+\dot{\theta}
+\end{bmatrix}
+$$
+
+From this, we can derive equations for both $$P$$ and $$K$$:
+
+$$
+P = -mgl\cos\theta
+$$
+$$
+K = \frac{1}{2}(M+m)\dot{x}^2 + \frac{1}{2}ml^2\dot{\theta}^2-m\dot{x}\dot{\theta}l\sin\theta
+$$
+
+This results in:
+
+$$
+L = K-P = \frac{1}{2}(M+m)\dot{x}^2 + \frac{1}{2}ml^2\dot{\theta}^2 - m\dot{x}\dot{\theta}l\sin\theta - mgl\sin\theta
+$$
+
+For $$q_1 = x$$, we have the following:
+
+$$
+Q_1 = F - \delta\dot{x}
+$$
+
+$$
+\frac{\partial L}{\partial x} = 0
+$$
+
+$$
+\frac{\partial L}{\partial \dot{x}} = (M+m)\dot{x} - m\dot{\theta}l\sin\theta
+$$
+
+$$
+\frac{d}{dt}(\frac{\partial L}{\partial \dot{x}}) = (M+m)\ddot{x} - m\ddot{\theta}l\sin\theta - m\dot{\theta}^2l\cos\theta
+$$
+
+Resulting in:
+
+$$
+(M+m)\ddot{x} - m\ddot{\theta}l\sin\theta - m\dot{\theta}^2l\cos\theta = F - \delta\dot{x}
+$$
+
+For $$q_2 = \theta$$, we have the following:
+
+$$
+Q_1 = 0
+$$
+
+$$
+\frac{\partial L}{\partial \theta} = -m\dot{x}\dot{theta}l\cos\theta - mgl\cos\theta
+$$
+
+$$
+\frac{\partial L}{\partial \dot{\theta}} = ml^2\dot{\theta} - m\dot{x}l\sin\theta
+$$
+
+$$
+\frac{d}{dt}(\frac{\partial L}{\partial \dot{\theta}}) = ml^2\ddot{\theta} - m\ddot{x}l\sin\theta - m\dot{x}\dot{\theta}l\cos\theta
+$$
+
+Resulting in:
+
+$$
+ml^2\ddot{\theta} - m\ddot{x}l\sin\theta + mgl\cos\theta = 0
+$$
+
+Combining the computed terms allows us to create the following matrix equation:
+
+$$
+\begin{bmatrix}
+(M+m) & -ml\sin\theta \\
+-ml\sin\theta & ml^2
+\end{bmatrix}
+\begin{bmatrix}
+\ddot{x} \\
+\ddot{\theta}
+\end{bmatrix}
+\=
+\begin{bmatrix}
+F - \delta\dot{x} + m\dot{\theta}^2l\cos\theta \\
+-mgl\cos\theta
+\end{bmatrix}
+$$
+
+Solving the above equation for $\left[ \ddot{x},\ \ddot{\theta} \right]^T$ results in the following matrix, where $$\Delta = ml^2(M+m(1-\sin^2\theta))$$.
+
+$$
+\begin{bmatrix}
+\ddot{x} \\
+\ddot{\theta}
+\end{bmatrix}
+\=
+\begin{bmatrix}
+\frac{ml^2(F - \delta\dot{x} + m\dot{\theta}^2l\cos\theta - mg\sin\theta\cos\theta)}{\Delta} \\
+\frac{ml\sin\theta(F - \delta\dot{x} + m\dot{\theta}^2l\cos\theta) - (M+m)(mgl\cos\theta)}{\Delta}
+\end{bmatrix}
+$$
+
+From here, we get:
+
+$$
+\frac{d}{dt}
+\begin{bmatrix}
+x \\
+\dot{x} \\
+\theta \\
+\dot{\theta}
+\end{bmatrix}
+\=
+\begin{bmatrix}
+\dot{x} \\
+\frac{ml^2(F - \delta\dot{x} + m\dot{\theta}^2l\cos\theta - mg\sin\theta\cos\theta)}{\Delta} \\
+\dot{\theta} \\
+\frac{ml\sin\theta(F - \delta\dot{x} + m\dot{\theta}^2l\cos\theta) - (M+m)(mgl\cos\theta)}{\Delta}
+\end{bmatrix}
+$$
+
+#### Model Linearization
+
+With the above matrix representation in hand, we can now linearize if about $$x=free$$, $$\dot{x}=0$$, $$\theta=\pi/2$$, and $$\dot{\theta}=0$$. After a lot of math, this eventually outputs:
+
+$$
+\frac{d}{dt}
+\begin{bmatrix}
+x \\
+\dot{x} \\
+\theta \\
+\dot{\theta}
+\end{bmatrix}
+\=
+\begin{bmatrix}
+0 & 1 & 0 & 0 \\
+0 & -\frac{\delta}{M} & \frac{mg}{M} & 0 \\
+0 & 0 & 0 & 1 \\
+0 & -\frac{\delta}{Ml} & \frac{g(M+m)}{Ml} & 0
+\end{bmatrix}
+\begin{bmatrix}
+x \\
+\dot{x} \\
+\theta \\
+\dot{\theta}
+\end{bmatrix}
+\+
+\begin{bmatrix}
+0 \\
+\frac{1}{M} \\
+0 \\
+\frac{1}{Ml}
+\end{bmatrix}
+F
+$$
+
+This, however, includes information of $$x$$ and $$\dot{x}$$, which I am not actually interested, so it can be reduced to the following form:
+
+$$
+\begin{bmatrix}
+\dot{\theta} \\
+\ddot{\theta}
+\end{bmatrix}
+\=
+\begin{bmatrix}
+0 & 1 \\
+\frac{g(M+m)}{Ml} & 0
+\end{bmatrix}
+\begin{bmatrix}
+\theta \\
+\dot{\theta}
+\end{bmatrix}
+\+
+\begin{bmatrix}
+0 \\
+\frac{1}{Ml}
+\end{bmatrix}
+F
+$$
+
+One remaining issue is that we can input PWM signals to the motors of the car, and I am unsure of how this maps to a force $$F$$. The force applied by the wheel will be equalt to the wheel's toqure divided by its radius, $$\frac{\tau}{r}$$, and I know that $$\tau$$ will be proportional to $$u$$ by some scaling factor $$\alpha$$ such that $$F = \frac{\tau}{r} = \frac{\alpha u}{r}$$. With this, we can rewrite the above expression to finally get:
+
+$$
+\begin{bmatrix}
+\dot{\theta} \\
+\ddot{\theta}
+\end{bmatrix}
+\=
+\begin{bmatrix}
+0 & 1 \\
+\frac{g(M+m)}{Ml} & 0
+\end{bmatrix}
+\begin{bmatrix}
+\theta \\
+\dot{\theta}
+\end{bmatrix}
+\+
+\begin{bmatrix}
+0 \\
+\frac{\alpha}{Mlr}
+\end{bmatrix}
+u
+$$
+
+$$
+A
+\=
+\begin{bmatrix}
+0 & 1 \\
+\frac{g(M+m)}{Ml} & 0
+\end{bmatrix}
+$$
+
+$$
+B
+\=
+\begin{bmatrix}
+0 \\
+\frac{\alpha}{Mlr}
+\end{bmatrix}
+$$
+
+With this state dynamics represntation in continuous time, we can now discretize $$A$$ and $$B$$ because the actual car updates in discrete time.
+
+#### Model Discretization and Python Implementation
+
+### Control 
+
 
 ```cpp
 float acc_x;
