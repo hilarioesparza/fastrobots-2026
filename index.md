@@ -28,3 +28,4 @@ This will be updated as the labs are finished.
 9. [Lab 9: Mapping](Pages/Lab9.md)
 10. [Lab 10: Grid Localization using Bayes Filter](Pages/Lab10.md)
 11. [Lab 11: Localization on the Real Robot](Pages/Lab11.md)
+12. [Lab 12: Inverted Pendulum](Pages/Lab12.md)
