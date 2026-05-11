@@ -14,7 +14,9 @@ In order to control the car, I decided to use a linear quadratic regulator (LQR)
 
 #### Mathematical Model
 
-$$ \\sum_{i=1}^n X_i $$
+$$ 
+\\sum_{i=1}^n X_i 
+$$
 
 ```cpp
 float acc_x;
