@@ -93,7 +93,7 @@ $$
 For $$q_2 = \theta$$, we have the following:
 
 $$
-Q_1 = 0
+Q_2 = 0
 $$
 
 $$
