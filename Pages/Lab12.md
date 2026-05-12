@@ -256,10 +256,6 @@ B=
 $$
 
 $$
-\dot{y}= Ay + Bu
-$$
-
-$$
 \begin{bmatrix}
 \dot{\theta} \\
 \ddot{\theta}
@@ -269,6 +265,10 @@ $$
 \dot{\theta}
 \end{bmatrix}+
 Bu
+$$
+
+$$
+\dot{y}= Ay + Bu
 $$
 
 With this state dynamics representation in continuous time, we can now discretize $$A$$ and $$B$$ because the actual car updates in discrete time.
