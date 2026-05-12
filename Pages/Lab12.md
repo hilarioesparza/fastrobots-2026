@@ -28,7 +28,7 @@ $$
 \frac{d}{dt}(\frac{\partial L}{\partial\dot{q}_i}) - \frac{\partial L}{\partial q_i} = Q_i
 $$
 
-Where $$q_i$$ represents one of the states of the system, and $$Q_i$$ represents the force affecting state $$q_i$$. To use this, therefore, we need to determine what $$K$$ and $$P$$ are.
+Where $$q_i$$ represents one of the states of the system, and $$Q_i$$ represents the force affecting the state $$q_i$$. To use this, therefore, we need to determine what $$K$$ and $$P$$ are.
 
 #### Mathematical Model
 
@@ -36,7 +36,7 @@ I will use the following diagram (borrowed from lecture material) to represent t
 
 **INSERT PHOTO**
 
-Here, $$M$$ is the mass of the lower portion of the pendulum, $$m$$ is the mass of the upper portion, $$l$$ is the length between them, $$\delta$$ is the drage due to friction, $$u$$ is the PWM input into the bottom wheels, $$\theta$$ is the pitch of the car relative to the ground, and $$x$$ is its distance from a wall.
+Here, $$M$$ is the mass of the lower portion of the pendulum, $$m$$ is the mass of the upper portion, $$l$$ is the length between them, $$\delta$$ represents friction, $$u$$ is the PWM input into the bottom wheels, $$\theta$$ is the pitch of the car relative to the ground, and $$x$$ is its distance from a wall.
 
 From this, we have the following state representation.
 
@@ -223,7 +223,7 @@ $$
 F
 $$
 
-One remaining issue is that we can input PWM signals to the motors of the car, and I am unsure of how this maps to a force $$F$$. The force applied by the wheel will be equalt to the wheel's toqure divided by its radius, $$\frac{\tau}{r}$$, and I know that $$\tau$$ will be proportional to $$u$$ by some scaling factor $$\alpha$$ such that $$F = \frac{\tau}{r} = \frac{\alpha u}{r}$$. With this, we can rewrite the above expression to finally get:
+One remaining issue is that we can input PWM signals to the motors of the car, and I am unsure of how this maps to a force $$F$$. The force applied by the wheel will be equal to the wheel's torque divided by its radius, $$\frac{\tau}{r}$$, and I know that $$\tau$$ will be proportional to $$u$$ by some scaling factor $$\alpha$$ such that $$F = \frac{\tau}{r} = \frac{\alpha u}{r}$$. With this, we can rewrite the above expression to finally get:
 
 $$
 \begin{bmatrix}
@@ -265,47 +265,112 @@ B
 \end{bmatrix}
 $$
 
-With this state dynamics represntation in continuous time, we can now discretize $$A$$ and $$B$$ because the actual car updates in discrete time.
+$$
+\dot{y}
+\=
+A
+y
+\+
+B
+u
+$$
+
+$$
+\begin{bmatrix}
+\dot{\theta} \\
+\ddot{\theta}
+\end{bmatrix}
+\=
+A
+\begin{bmatrix}
+\theta \\
+\dot{\theta}
+\end{bmatrix}
+\+
+B
+u
+$$
+
+With this state dynamics representation in continuous time, we can now discretize $$A$$ and $$B$$ because the actual car updates in discrete time.
 
 #### Model Discretization and Python Implementation
 
-### Control 
+I decided to discretize the system with $$dt =  0.006148$$ seconds, which was the average period of time that my control loop for the inverted pendulum stunt performed at. To discretize $$A$$, one must compute $$e^{Adt} = A_d$$. To discretize $$B$$, one needs to calculate 
+$$(\int_{0}^{dt} e^{A\tau} \,d\tau)B$$. Luckily, when $$A$$ is invertible, this reduces to $$B_d=A^-1(A-I)B$$. In Python this looked like:
 
+```python
+A_cont = np.array([[0, 1], [(g*(M+m))/(M*l), 0]])
+B_cont = np.array([[0], [alpha/(M*l*r)]])
+
+A_dis = expm(A_cont*dt)
+B_dis = np.linalg.inv(A_cont) @ (A_dis - np.eye(2)) @ B_cont
+```
+
+I was able to determine some of the characteristics of the system by directly measuring it. For example, using a caliper I found $$l = 0.10195 [m]$$ and $$r = 0.04081 [m]$$. I was able to find the total weight of the car, $$M+m = 0.532 [kg]$$, but I wasn’t sure how large $$M$$ was compared to $$m$$. Additionally, I wasn’t exactly sure how the PWM input scaled to torque output, so $$\alpha$$ was unknown. Therefore, both of these characteristics became things that I needed to tune when testing the LQR output.
+
+```python
+g = 9.81 # m/s^2
+total_car_mass = 0.532 # kg
+fraction_of_top = 0.4 # a guess
+fraction_of_bottom = 1 - fraction_of_top
+m = fraction_of_top*total_car_mass # kg
+M = fraction_of_bottom*total_car_mass # kg
+l = 0.10195 # m
+r = 0.04081 # m 
+alpha = 0.065/255 # Nm/pwm, a guess
+dt = 0.006148 # seconds
+```
+
+The LQR output is called the LQR gain $$K$$, and it allows a system to find the optimal control given its current state by $$u = Ky$$, where $$y=\left[ \ddot{x},\ \ddot{\theta} \right]^T$$. To find this, it is also necessary the define the $$Q$$ and $$R$$ matrices. $$Q$$ represented how much you care that either state is at its set point, and $$R$$ represents how much you care about the input cost of getting to the set point. In the inverted pendulum system, I care heavily that $$\theta=\ang{90}$$, and less importantly that $$\dot{\theta}=0$$. Since I am just trying to stabilize the system and I don’t care about how much effort it takes to do it, I can set $$R$$ relatively low, shifting the focus of the LQR to prioritize the proper orientation and speed instead. For all my trials I have $$R=[[0.001]]$$. Tuning the value of $$Q$$ is a part of any LQR, and for my system I must also tune $$\alpha$$ and the computational representation of the distribution of mass.
+
+After $$Q$$ and $$R$$ are defined, finding $$K$$ is easy.
+
+```python
+Q = np.array([[250, 0], [0, 100]])
+R = np.array([[0.001]])
+
+X = solve_discrete_are(A_dis, B_dis, Q, R)
+
+K = (np.linalg.inv(R+B_dis.T@X@B_dis))@(B_dis.T@X@A_dis)
+```
+
+I can then send the values of the computed LQR gain to the Artemis to use for its control loop via a Bluetooth command.
+
+```python
+k0 = round(K[0][0],2)
+k1 = round(K[0][1],2)
+
+string = str(k0) + "|" + str(k1)
+
+ble.send_command(CMD.SET_LQR_GAINS, string)
+```
+
+I also make it so that I can start and stop the controller from running on the Artemis, which was helpful when I wanted to try new LQR gain values.
+
+```python
+
+ble.send_command(CMD.START_INVERTED_PENDULUM, "")
+
+ble.send_command(CMD.STOP_INVERTED_PENDULUM, "")
+
+```
+
+### Control Implementation
+
+The control loop in the Artemis was essentially a PD controller, with `kp` and `kd` being determined by the first and second value of the LQR gain $$K$$. For the error, I used the difference between a low-passed filtered pitch calculation from the accelerometer data. I did not think that it was necessary to build a full Kalman Filter for pitch estimation since the IMU sampling rate was relatively fast, especially since I removed the DMP initialization and usage for this stunt in particular. For the derivative term, I took the derivative of the pitch as opposed to the derivative of the error by simply using the gyroscope reading.
+
+I made sure to account for any offset the accelerometer might report due to a slight tilt in its placement on the car which may have not been visible to me. This, as well as calculating a gyroscope bias, is done in the first `if` statement in the function that I built, `inverted_pendulum()`. After that, this calibration is never run again and a simple control loop takes place. I calculate the pitch, find the error from the desired pitch minus any unintentional offset, determine the angular speed, use the gains from the LQR, and determine the PWM output to the motors.
+
+I also track pitch, PWM input, and timing data, which I return to my laptop via Bluetooth once `STOP_INVERTED_PENDULUM` is called.
+
+The following is the final version of my control function: 
 
 ```cpp
-float acc_x;
-float acc_y;
-float acc_z;
-float gyro_x;
-float angular_speed;
-float pitch_error;
-float input;
-int first_run_pendulum = 1;
-float a_x = 0.5;
-float a_y = 0.5;
-float a_z = 0.5;
-float g_x = 0.2;
-float cutoff_degree = 50;
-float cutoff_radians = (cutoff_degree*PI)/(180.0);
-float gyro_bias;
-int first_data_collected = 0;
-float dt_pendulum = 0.00345077469;
-float acc_pitch;
-float pitch_offset;
-unsigned long previous_time;
-
-
-float avg_dt = 0;
-
-
 void inverted_pendulum(){
-
 
    drive_motors(pwm_input);
 
-
    if (first_run_pendulum) {
-
 
        int place_holder = 0;
        while (place_holder < 500){
@@ -317,9 +382,7 @@ void inverted_pendulum(){
            }
        }
 
-
        gyro_bias = gyro_bias/500;
-
 
        while (!first_data_collected){
            if (myICM.dataReady()){
@@ -331,20 +394,14 @@ void inverted_pendulum(){
            }
        }
 
-
        angular_speed = (gyro_x*PI)/180.0;
        acc_pitch = atan2(acc_y, acc_z);
-
-
        pitch = acc_pitch;
        pitch_offset = pitch;
 
-
        first_run_pendulum = 0;
 
-
        previous_time = micros();
-
 
    } else {
        if (myICM.dataReady()){
@@ -354,27 +411,18 @@ void inverted_pendulum(){
            acc_z = (1-a_z)*myICM.accZ()+(a_z*acc_z);
            gyro_x = myICM.gyrX()-gyro_bias;
 
-
            acc_pitch = atan2(acc_y, acc_z);
            angular_speed = (gyro_x*PI)/180.0;
 
-
            current_time = micros();
-
-
            dt_pendulum = ((float)(current_time - previous_time))*1e-6;
            previous_time = current_time;
-
 
            pitch = 0.9*pitch + 0.1*acc_pitch;
            pitch_error = (-PI/2 - pitch_offset) - pitch;
 
-
            input = -1*(k0*pitch_error - k1*angular_speed);
-
-
            pwm_input = input;
-
 
            if ((abs(pitch_error) >= cutoff_radians)) {
                pwm_input = 0;
@@ -390,7 +438,6 @@ void inverted_pendulum(){
                }
            }
 
-
            if ( dt_counter < length_of_array ){
                yaw1[dt_counter] = pitch;
                pwm[dt_counter] = pwm_input;
@@ -402,190 +449,46 @@ void inverted_pendulum(){
 }
 ```
 
-```cpp
-void
-loop()
-{
-   // Listen for connections
-   BLEDevice central = BLE.central();
+### Real System Behavior and Tuning
 
+Initially, I had the goal pitch as 90°. My first attempt at this was relatively poor, as can be seen in the video below.
 
-   // If a central is connected to the peripheral
-   if (central) {
-       Serial.print("Connected to: ");
-       Serial.println(central.address());
+<iframe width="560" height="315" src="https://www.youtube.com/embed/Hx7J4xPu5bM" title="ECE 4160: Lab 8 Fast Drift" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen> </iframe> 
 
+I forgot to document the $$Q$$, $$\alpha$$, weight distribution, and $$K$$ values for this first run, but these changed for every following trial.
 
-       // While central is connected
-       while (central.connected()) {
+One of the next trials I conducted had $$Q=[[250,0],[0,100]]$$, $$\alpha=\frac{0.07}{255}$$, and 40% of the mass of the car at the top of the inverted pendulum. This resulted in LQR gains of `k0 = 1519.93` and `k1 = 279.95`. These gains produced the following output.
 
+<iframe width="560" height="315" src="https://www.youtube.com/embed/N21S4HkBKrI" title="ECE 4160: Lab 8 Fast Drift" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen> </iframe> 
 
-           // Send data
-           write_data();
+# <img src="Images/Lab 12/third_pitch.png" style="max-width:90%"/>
 
+# <img src="Images/Lab 12/third_pwm.png" style="max-width:90%"/>
 
-           // Read data
-           read_data();
+I won’t include all the rest of my trials, but it is interesting to note that the most ideal controller gains I found corresponded with almost the exact same setup as the trial shown above. The only difference was $$\alpha=\frac{0.065}{255}$$, a difference of `0.0000196` from the previous value.
 
+However, this wasn’t the only major change. In the midst of testing yet another set of LQR gains, after hours of watching the car destabilize and fall, I accidentally flipped the car the opposite way. Instead of a pitch of 90°, I moved it to -90°. I didn’t notice the mistake, but the results were clear. The car was actually stabilizing and not just falling over! I couldn’t understand why the behavior changed, so I looked back at the video I took of it and realized that I had flipped the orientation of the car on accident.
 
-           if (distance_pid && !distance_pid_running){
-               distanceSensor0.startRanging();
-               run_distance_pid();
-               distance_pid_running = 1;
-           }
+This video is shown below, along with the data from that trial.
 
+<iframe width="560" height="315" src="https://www.youtube.com/embed/gWarCh5wmC0" title="ECE 4160: Lab 8 Fast Drift" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen> </iframe> 
 
-           if (distance_pid && distance_pid_running){
-               run_distance_pid();
-           }
+# <img src="Images/Lab 12/fifth_pitch.png" style="max-width:90%"/>
 
+# <img src="Images/Lab 12/fifth_pwm.png" style="max-width:90%"/>
 
-           if (send_distance_pid){
-               Serial.println("Sending Distance PID data");
-               transmit_distance_pid_info();
-           }
+To reiterate, the two previous trials were run with the exact same LQR gains. The only difference was the orientation of the car. I assume that this is because when I accidentally flipped the car, the IMU was at the top of the pendulum instead of at the base. This could theoretically allow the IMU to more quickly relay accurate pitch and angular velocity data about the top of the inverted pendulum as compared to when it was positioned at the bottom. This allowed for the control loop to react faster, causing the car to stabilize.
 
+After making this realization, I changed the control loop code so that the setpoint was -90°, and ran the following trial.
 
-           if (angular_pid){
-               Serial.println("Running angular pid");
-               run_angular_pid();
-           }
+<iframe width="560" height="315" src="https://www.youtube.com/embed/1GtTp95dF1g" title="ECE 4160: Lab 8 Fast Drift" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen> </iframe> 
 
+# <img src="Images/Lab 12/sixth_pitch.png" style="max-width:90%"/>
 
-           if (send_angular_pid){
-               Serial.println("Sending Angular PID data");
-               transmit_angle_pid_info();
-           }
+# <img src="Images/Lab 12/sixth_pwm.png" style="max-width:90%"/>
 
+### Conclusion and Acknowledgements
 
-           if (disable_motors){
-               stop_motors();
-           }
+The gain from an LQR works great, but only if your actual system matches the representation used in the math of the LQR. Make sure to always double check this to save yourself time and effort! I referenced Stephan Wagner’s and Nita Kattimani’s previous course websites when completing this lab.
 
-
-           if (just_drive_forward && !already_started){
-               distanceSensor0.startRanging();
-               just_drive();
-           }
-
-
-           if (just_drive_forward && already_started){
-               just_drive();
-           }
-
-
-           if (initiate_drift && !drift_running){
-               distanceSensor0.startRanging();
-               do_the_drift();
-               drift_running = 1;
-           }
-
-
-           if (initiate_drift && drift_running){
-               do_the_drift();
-           }
-
-
-           if (run_inverted_pendulum){
-               inverted_pendulum();
-           } else {
-               first_run_pendulum =1;
-           }
-       }
-
-
-       analogWrite(9, 0);
-       analogWrite(11, 0);
-       analogWrite(12, 0);
-       analogWrite(14, 0);
-
-
-       Serial.println("Disconnected");
-   }
-}
-```
-
-```cpp
-       case START_INVERTED_PENDULUM:
-           dt_counter = 0;
-           pwm_input = 0;
-           run_inverted_pendulum = 1;
-           break;
-      
-       case STOP_INVERTED_PENDULUM:
-           run_inverted_pendulum = 0;
-           drive_motors(0);
-           transmit_pendulum_info();
-           break;
-
-
-       case SET_LQR_GAINS:
-           success = robot_cmd.get_next_value(k0);
-           if (!success)
-               return;
-           success = robot_cmd.get_next_value(k1);
-           if (!success)
-               return;
-           break;
-```
-
-```python
-from scipy.linalg import solve_discrete_are
-import numpy as np
-from scipy.linalg import expm
-
-g = 9.81 # m/s^2
-total_car_mass = 0.532 # 0.532 with no quarters, 0.5887 with quarters # kg
-fraction_of_top = 0.4
-fraction_of_bottom = 1 - fraction_of_top
-m = fraction_of_top*total_car_mass # kg
-M = fraction_of_bottom*total_car_mass # kg
-l = 0.10195 # m
-r = 0.04081 # m 
-alpha = 0.065/255 # Nm/pwm 0.1/255
-dt = 0.006148 # 0.00345077469 # seconds
-
-# Example matrices for A'X + XA - XBR^-1B'X + Q = 0
-A_cont = np.array([[0, 1], [(g*(M+m))/(M*l), 0]])
-B_cont = np.array([[0], [alpha/(M*l*r)]])
-
-A_dis = expm(A_cont*dt)
-B_dis = np.linalg.inv(A_cont) @ (A_dis - np.eye(2)) @ B_cont
-
-Q = np.array([[250, 0], [0, 100]])
-R = np.array([[0.001]])
-
-X = solve_discrete_are(A_dis, B_dis, Q, R)
-
-K = (np.linalg.inv(R+B_dis.T@X@B_dis))@(B_dis.T@X@A_dis)
-
-time = []
-pitch = []
-pwm = []
-
-k0 = round(K[0][0],2)
-k1 = round(K[0][1],2)
-
-print("k0: " + str(k0))
-print("k1: " + str(k1))
-
-string = str(k0) + "|" + str(k1)
-
-ble.send_command(CMD.SET_LQR_GAINS, string)
-```
-
-```python
-
-ble.send_command(CMD.START_INVERTED_PENDULUM, "")
-
-```
-
-```python
-
-ble.send_command(CMD.STOP_INVERTED_PENDULUM, "")
-
-```
-
-# <img src="Images/Lab 11/simulated_bayes.png" style="max-width:90%"/>
-
-<iframe width="560" height="315" src="https://www.youtube.com/embed/3n78RNZNCmE" title="ECE 4160: Lab 8 Fast Drift" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen> </iframe> 
+I truly enjoyed this course, and loved working on everything from soldering hardware to mapping to controlling inherently unstable systems. My knowledge of robotics has definitely been deepened, and I can’t wait to use what I have learned in the future!
