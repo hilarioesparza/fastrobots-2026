@@ -185,8 +185,7 @@ x \\
 \dot{x} \\
 \theta \\
 \dot{\theta}
-\end{bmatrix}
-\+
+\end{bmatrix} +
 \begin{bmatrix}
 0 \\
 \frac{1}{M} \\
@@ -210,8 +209,7 @@ $$
 \begin{bmatrix}
 \theta \\
 \dot{\theta}
-\end{bmatrix}
-\+
+\end{bmatrix} +
 \begin{bmatrix}
 0 \\
 \frac{1}{Ml}
@@ -233,8 +231,7 @@ $$
 \begin{bmatrix}
 \theta \\
 \dot{\theta}
-\end{bmatrix}
-\+
+\end{bmatrix} +
 \begin{bmatrix}
 0 \\
 \frac{\alpha}{Mlr}
@@ -259,27 +256,19 @@ B=
 $$
 
 $$
-\dot{y}=
-A
-y
-\+
-B
-u
+\dot{y}= Ay + Bu
 $$
 
 $$
 \begin{bmatrix}
 \dot{\theta} \\
 \ddot{\theta}
-\end{bmatrix}=
-A
+\end{bmatrix}= A
 \begin{bmatrix}
 \theta \\
 \dot{\theta}
-\end{bmatrix}
-\+
-B
-u
+\end{bmatrix}+
+Bu
 $$
 
 With this state dynamics representation in continuous time, we can now discretize $$A$$ and $$B$$ because the actual car updates in discrete time.
@@ -287,7 +276,7 @@ With this state dynamics representation in continuous time, we can now discretiz
 #### Model Discretization and Python Implementation
 
 I decided to discretize the system with $$dt =  0.006148$$ seconds, which was the average period of time that my control loop for the inverted pendulum stunt performed at. To discretize $$A$$, one must compute $$e^{Adt} = A_d$$. To discretize $$B$$, one needs to calculate 
-$$(\int_{0}^{dt} e^{A\tau} \,d\tau)B$$. Luckily, when $$A$$ is invertible, this reduces to $$B_d=A^-1(A-I)B$$. In Python this looked like:
+$$(\int_{0}^{dt} e^{A\tau} \,d\tau)B$$. Luckily, when $$A$$ is invertible, this reduces to $$B_d=A^{-1}(A-I)B$$. In Python this looked like:
 
 ```python
 A_cont = np.array([[0, 1], [(g*(M+m))/(M*l), 0]])
