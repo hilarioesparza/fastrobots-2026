@@ -34,7 +34,7 @@ Where $$q_i$$ represents one of the states of the system, and $$Q_i$$ represents
 
 I will use the following diagram (borrowed from lecture material) to represent the inverted pendulum system. The only change I will make is that the offset of $$\pi$$ will be an offset of $$\pi/2$$ in my system.
 
-**INSERT PHOTO**
+# <img src="Images/Lab 12/system_diagram.png" style="max-width:90%"/>
 
 Here, $$M$$ is the mass of the lower portion of the pendulum, $$m$$ is the mass of the upper portion, $$l$$ is the length between them, $$\delta$$ represents friction, $$u$$ is the PWM input into the bottom wheels, $$\theta$$ is the pitch of the car relative to the ground, and $$x$$ is its distance from a wall.
 
@@ -55,6 +55,7 @@ From this, we can derive equations for both $$P$$ and $$K$$:
 $$
 P = -mgl\cos\theta
 $$
+
 $$
 K = \frac{1}{2}(M+m)\dot{x}^2 + \frac{1}{2}ml^2\dot{\theta}^2-m\dot{x}\dot{\theta}l\sin\theta
 $$
@@ -96,7 +97,7 @@ Q_1 = 0
 $$
 
 $$
-\frac{\partial L}{\partial \theta} = -m\dot{x}\dot{theta}l\cos\theta - mgl\cos\theta
+\frac{\partial L}{\partial \theta} = -m\dot{x}\dot{\theta}l\cos\theta - mgl\cos\theta
 $$
 
 $$
