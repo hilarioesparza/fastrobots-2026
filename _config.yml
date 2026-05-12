@@ -2,3 +2,8 @@ theme: jekyll-theme-slate
 title: [ECE 4160 Fast Robots]
 include: ["index.md"]
 description: [Project Documentation of Lalo Esparza's ECE 4160 Labs]
+
+
+markdown: kramdown
+kramdown:
+  math_engine: mathjax
