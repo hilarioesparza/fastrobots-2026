@@ -276,7 +276,7 @@ With this state dynamics representation in continuous time, we can now discretiz
 #### Model Discretization and Python Implementation
 
 I decided to discretize the system with $$dt =  0.006148$$ seconds, which was the average period of time that my control loop for the inverted pendulum stunt performed at. To discretize $$A$$, one must compute $$e^{Adt} = A_d$$. To discretize $$B$$, one needs to calculate 
-$$(\int_{0}^{dt} e^{A\tau} \,d\tau)B$$. Luckily, when $$A$$ is invertible, this reduces to $$B_d=A^{-1}(A-I)B$$. In Python this looked like:
+$$(\int_{0}^{dt} e^{A\tau} \,d\tau)B$$. Luckily, when $$A$$ is invertible, this reduces to $$B_d=A^{-1}(A_d-I)B$$. In Python this looked like:
 
 ```python
 A_cont = np.array([[0, 1], [(g*(M+m))/(M*l), 0]])
