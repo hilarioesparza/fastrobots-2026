@@ -131,7 +131,7 @@ F - \delta\dot{x} + m\dot{\theta}^2l\cos\theta \\
 \end{bmatrix}
 $$
 
-Solving the above equation for $\left[ \ddot{x},\ \ddot{\theta} \right]^T$ results in the following matrix, where $$\Delta = ml^2(M+m(1-\sin^2\theta))$$.
+Solving the above equation for $$\left[ \ddot{x},\ \ddot{\theta} \right]^T$$ results in the following matrix, where $$\Delta = ml^2(M+m(1-\sin^2\theta))$$.
 
 $$
 \begin{bmatrix}
