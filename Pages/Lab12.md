@@ -123,22 +123,20 @@ $$
 \begin{bmatrix}
 \ddot{x} \\
 \ddot{\theta}
-\end{bmatrix}
-\=
+\end{bmatrix}=
 \begin{bmatrix}
 F - \delta\dot{x} + m\dot{\theta}^2l\cos\theta \\
 -mgl\cos\theta
 \end{bmatrix}
 $$
 
-Solving the above equation for $$\left[ \ddot{x},\ \ddot{\theta} \right]^T$$ results in the following matrix, where $$\Delta = ml^2(M+m(1-\sin^2\theta))$$.
+Solving the above equation for $\left[ \ddot{x},\ \ddot{\theta} \right]^T$ results in the following matrix, where $$\Delta = ml^2(M+m(1-\sin^2\theta))$$.
 
 $$
 \begin{bmatrix}
 \ddot{x} \\
 \ddot{\theta}
-\end{bmatrix}
-\=
+\end{bmatrix}=
 \begin{bmatrix}
 \frac{ml^2(F - \delta\dot{x} + m\dot{\theta}^2l\cos\theta - mg\sin\theta\cos\theta)}{\Delta} \\
 \frac{ml\sin\theta(F - \delta\dot{x} + m\dot{\theta}^2l\cos\theta) - (M+m)(mgl\cos\theta)}{\Delta}
@@ -154,8 +152,7 @@ x \\
 \dot{x} \\
 \theta \\
 \dot{\theta}
-\end{bmatrix}
-\=
+\end{bmatrix}=
 \begin{bmatrix}
 \dot{x} \\
 \frac{ml^2(F - \delta\dot{x} + m\dot{\theta}^2l\cos\theta - mg\sin\theta\cos\theta)}{\Delta} \\
@@ -175,8 +172,7 @@ x \\
 \dot{x} \\
 \theta \\
 \dot{\theta}
-\end{bmatrix}
-\=
+\end{bmatrix}=
 \begin{bmatrix}
 0 & 1 & 0 & 0 \\
 0 & -\frac{\delta}{M} & \frac{mg}{M} & 0 \\
@@ -205,8 +201,7 @@ $$
 \begin{bmatrix}
 \dot{\theta} \\
 \ddot{\theta}
-\end{bmatrix}
-\=
+\end{bmatrix}=
 \begin{bmatrix}
 0 & 1 \\
 \frac{g(M+m)}{Ml} & 0
@@ -229,8 +224,7 @@ $$
 \begin{bmatrix}
 \dot{\theta} \\
 \ddot{\theta}
-\end{bmatrix}
-\=
+\end{bmatrix}=
 \begin{bmatrix}
 0 & 1 \\
 \frac{g(M+m)}{Ml} & 0
@@ -248,8 +242,7 @@ u
 $$
 
 $$
-A
-\=
+A=
 \begin{bmatrix}
 0 & 1 \\
 \frac{g(M+m)}{Ml} & 0
@@ -257,8 +250,7 @@ A
 $$
 
 $$
-B
-\=
+B=
 \begin{bmatrix}
 0 \\
 \frac{\alpha}{Mlr}
@@ -266,8 +258,7 @@ B
 $$
 
 $$
-\dot{y}
-\=
+\dot{y}=
 A
 y
 \+
@@ -279,8 +270,7 @@ $$
 \begin{bmatrix}
 \dot{\theta} \\
 \ddot{\theta}
-\end{bmatrix}
-\=
+\end{bmatrix}=
 A
 \begin{bmatrix}
 \theta \\
@@ -321,7 +311,7 @@ alpha = 0.065/255 # Nm/pwm, a guess
 dt = 0.006148 # seconds
 ```
 
-The LQR output is called the LQR gain $$K$$, and it allows a system to find the optimal control given its current state by $$u = Ky$$, where $$y=\left[ \ddot{x},\ \ddot{\theta} \right]^T$$. To find this, it is also necessary the define the $$Q$$ and $$R$$ matrices. $$Q$$ represented how much you care that either state is at its set point, and $$R$$ represents how much you care about the input cost of getting to the set point. In the inverted pendulum system, I care heavily that $$\theta=\ang{90}$$, and less importantly that $$\dot{\theta}=0$$. Since I am just trying to stabilize the system and I don’t care about how much effort it takes to do it, I can set $$R$$ relatively low, shifting the focus of the LQR to prioritize the proper orientation and speed instead. For all my trials I have $$R=[[0.001]]$$. Tuning the value of $$Q$$ is a part of any LQR, and for my system I must also tune $$\alpha$$ and the computational representation of the distribution of mass.
+The LQR output is called the LQR gain $$K$$, and it allows a system to find the optimal control given its current state by $$u = Ky$$, where $$y=\left[ \ddot{x},\ \ddot{\theta} \right]^T$$. To find this, it is also necessary to define the $$Q$$ and $$R$$ matrices. $$Q$$ represents how much you care that either state is at its set point, and $$R$$ represents how much you care about the input cost of getting to the set point. In the inverted pendulum system, I care heavily that $$\theta=90$$ degrees, and less importantly that $$\dot{\theta}=0$$. Since I am just trying to stabilize the system and I don’t care about how much effort it takes to do it, I can set $$R$$ relatively low, shifting the focus of the LQR to prioritize the proper orientation and speed instead. For all my trials I have $$R=[[0.001]]$$. Tuning the value of $$Q$$ is a part of any LQR, and for my system I must also tune $$\alpha$$ and the computational representation of the distribution of mass.
 
 After $$Q$$ and $$R$$ are defined, finding $$K$$ is easy.
 
