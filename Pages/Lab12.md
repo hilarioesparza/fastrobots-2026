@@ -435,8 +435,6 @@ Initially, I had the goal pitch as 90°. My first attempt at this was relatively
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/Hx7J4xPu5bM" title="ECE 4160: Lab 8 Fast Drift" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen> </iframe> 
 
-I forgot to document the $$Q$$, $$\alpha$$, weight distribution, and $$K$$ values for this first run, but these changed for every following trial.
-
 One of the next trials I conducted had $$Q=[[250,0],[0,100]]$$, $$\alpha=\frac{0.07}{255}$$, and 40% of the mass of the car at the top of the inverted pendulum. This resulted in LQR gains of `k0 = 1519.93` and `k1 = 279.95`. These gains produced the following output.
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/N21S4HkBKrI" title="ECE 4160: Lab 8 Fast Drift" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen> </iframe> 
@@ -445,11 +443,11 @@ One of the next trials I conducted had $$Q=[[250,0],[0,100]]$$, $$\alpha=\frac{0
 
 # <img src="Images/Lab 12/third_pwm.png" style="max-width:90%"/>
 
-I won’t include all the rest of my trials, but it is interesting to note that the most ideal controller gains I found corresponded with almost the exact same setup as the trial shown above. The only difference was $$\alpha=\frac{0.065}{255}$$, a difference of `0.0000196` from the previous value.
+I won’t include all of my trials, but it is interesting to note that the most ideal controller gains I found corresponded with almost the exact same setup as the trial shown above. The only difference was changing $$\alpha$$ to $$\frac{0.065}{255}$$, a minor difference of `0.0000196` from the previous value.
 
-However, this wasn’t the only major change. In the midst of testing yet another set of LQR gains, after hours of watching the car destabilize and fall, I accidentally flipped the car the opposite way. Instead of a pitch of 90°, I moved it to -90°. I didn’t notice the mistake, but the results were clear. The car was actually stabilizing and not just falling over! I couldn’t understand why the behavior changed, so I looked back at the video I took of it and realized that I had flipped the orientation of the car on accident.
+The biggest change wasn’t with my parameters, it was with my physical setup. After hours of watching the car destabilize and fall, I accidentally flipped the car the opposite way. Instead of a pitch of 90°, I moved it to -90°. I didn’t notice the mistake, but the results were clear. The car was actually stabilizing and not just falling over! I couldn’t understand why the behavior changed, so I looked back at the video and realized that I had accidentally flipped the orientation of the car.
 
-This video is shown below, along with the data from that trial.
+This trial is shown below, along with the data from that trial.
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/gWarCh5wmC0" title="ECE 4160: Lab 8 Fast Drift" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen> </iframe> 
 
@@ -457,7 +455,7 @@ This video is shown below, along with the data from that trial.
 
 # <img src="Images/Lab 12/fifth_pwm.png" style="max-width:90%"/>
 
-To reiterate, the two previous trials were run with the exact same LQR gains. The only difference was the orientation of the car. I assume that this is because when I accidentally flipped the car, the IMU was at the top of the pendulum instead of at the base. This could theoretically allow the IMU to more quickly relay accurate pitch and angular velocity data about the top of the inverted pendulum as compared to when it was positioned at the bottom. This allowed for the control loop to react faster, causing the car to stabilize.
+To reiterate, the two previous trials were run with almost identical LQR gains. The only significant difference was the orientation of the car. I assume that this is because when I accidentally flipped the car, the IMU was at the top of the pendulum instead of at the base. This could theoretically allow the IMU to more quickly relay accurate pitch and angular velocity data about the top of the inverted pendulum as compared to when it was positioned at the bottom. This allowed for the control loop to react faster, causing the car to stabilize.
 
 After making this realization, I changed the control loop code so that the setpoint was -90°, and ran the following trial.
 
