@@ -44,13 +44,13 @@ Here is an image when the IMU is facing downwards. Note the change of sign on th
 
 When the accelerometer returns measurements, the precision of the measurements depends on the full-scale range of the IMU, which is programmable. In my program, the full-scale range is such that the accelerometer reports acceleration values between ±2g. This means that a value of 1g is reported as the integer value 16,384. 
 
-When the is IMU flat on the table, one would expect the z-acceleration to be +16,384 when facing up, and -16,384 when facing down. My IMU reported about 17,114 when facing upwards and -15,782 when facing down. Assuming that any offset from the expected output is linear, I can determine how far away the data is from the expected values in the down and up position. By averaging these differences and adding this averaged offset to all of the acceleration data, I can make is comparable with what is expected. Therefore, I will subtract about 660 to all acceleration data collected moving forward, a correction of about 0.04g.
+When the IMU is flat on the table, one would expect the z-acceleration to be +16,384 when facing up, and -16,384 when facing down. My IMU reported about 17,114 when facing upwards and -15,782 when facing down. Assuming that any offset from the expected output is linear, I can determine how far away the data is from the expected values in the down and up position. By averaging these differences and adding this averaged offset to all of the acceleration data, I can make it comparable with what is expected. Therefore, I will subtract about 660 to all acceleration data collected moving forward, a correction of about 0.04g.
 
 ### Roll and Pitch as Determined by the Accelerometer
 
 In order to calculate the pitch and roll of the IMU, two very simple equations are needed. By using geometry and trigonometry on a simple model of the IMU, it can be determined that the equation to determine the pitch of the IMU is: **atan2(x-acceleration, z-acceleration)**, and the equation for roll is **atan2(y-acceleration, z-acceleration)**. 
 
-As it can be seen, these two equations are both dependent on the z-acceleration, which couples them and can lead to undesirable effects when the z component approaches 0. This causes either the pitch or roll to diverege when the othe one approaches ±90 degrees. These singularities are due to the mathematical equations of the pitch and roll and are not related to the sensor itself. See below for more examples of this.
+As it can be seen, these two equations are both dependent on the z-acceleration, which couples them and can lead to undesirable effects when the z component approaches 0. This causes either the pitch or roll to diverge when the other one approaches ±90 degrees. These singularities are due to the mathematical equations of the pitch and roll and are not related to the sensor itself. See below for more examples of this.
 
 ##### Value of Pitch and Roll when Pitch is positioned at -90 Degrees
 # <img src="Images/Lab 2/a_roll_and_pitch_pitch_at_-90.png" style="max-width:75%"/>
@@ -151,11 +151,11 @@ The arrays storing the pitch, roll, and time values were 3000 indices long, and 
 
 I believe that it makes most sense to store the pitch, roll, and time data in separate arrays of floats and integers. This decreases any additional memory required to store an array of specialized structs. It is not more memory efficient to store all of the data into one large array because you would have to cast all the data to the same type of variable, which can actually increase memory usage. Additionally, storing all of the data in one large array would become harder for the Python scripts to sift through and use, adding to the computational complexity of analyzing the sensor's readings.
 
-As discussed in Lab 1, the amount of memory that I can allocate to my arrays depends on the number of arrays that I have. If, for example, I only care about the pitch and roll output from the complementary filter and the time, then I would only need three arrays. Two of these arrays would be of floats, and the time associated array would be made of integers. This means that to store one element in each of these three arrays will collectively cost 12 bytes of memory, because both floats and integers are 4 bytes. Given that there are 384 kB of RAM, there is an upper limit of 32 kB per array available. However, this is purely a theoretical uper limit and would most likely not be true in any real system because other parts of the program may also be stored in RAM. It might be more safe to say that we could allocate half of that value to the arrays, so 16 kB per array.
+As discussed in Lab 1, the amount of memory that I can allocate to my arrays depends on the number of arrays that I have. If, for example, I only care about the pitch and roll output from the complementary filter and the time, then I would only need three arrays. Two of these arrays would be of floats, and the time associated array would be made of integers. This means that to store one element in each of these three arrays will collectively cost 12 bytes of memory, because both floats and integers are 4 bytes. Given that there are 384 kB of RAM, there is an upper limit of 32 kB per array available. However, this is purely a theoretical upper limit and would most likely not be true in any real system because other parts of the program may also be stored in RAM. It might be more safe to say that we could allocate half of that value to the arrays, so 16 kB per array.
 
 ### Duration of IMU Data Collection
 
-In order to ensure that the robotic system will have enough data to work with at a time, it is helpful to have data be collected for large amounts of time. I was able to get my system to collect data for more than 10 seconds at frequency of about 294 data points per second, as shown below.
+In order to ensure that the robotic system will have enough data to work with at a time, it is helpful to have data be collected for large amounts of time. I was able to get my system to collect data for more than 10 seconds at a frequency of about 294 data points per second, as shown below.
 
 # <img src="Images/Lab 2/10secondPitch.png" style="max-width:75%"/>
 
@@ -176,5 +176,6 @@ The car is very responsive and fast. It is able to change directions quickly, as
   title="ECE 4160: Lab 2 Spinning Car" frameborder="0"
   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen>
 </iframe>
+
 
 
