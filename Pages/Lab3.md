@@ -12,7 +12,7 @@ There are different types of communication protocols between sensors and microco
 
 Due to the fact that many devices can share one I2C bus, each of these devices must be uniquely addressable by the microcontroller. This allows the controller to indicate which device it wants to write/read data to/from, and then that particular device can acknowledge that it is ready to receive/send data. Then communication between the controller and device can take place. However, it is common to have multiple sensors with the same address. For example, in this lab, the IMU has a unique I2C address of 0x69, but both Time of Flight (ToF) sensors have the same default address.
 
-Interestingly, while the documentation for the ToF sensors says that they have an I2C address of 0x52/0x53, their actual default address is 0x29. This will be explained in the **I2C Addressing** section below. Both ToF sensors sharing the same address presents an issue when wanting to create a system that uses them simultaneaously, and solutions to this problem are discussed below.
+Interestingly, while the documentation for the ToF sensors says that they have an I2C address of 0x52/0x53, their actual default address is 0x29. This will be explained in the **I2C Addressing** section below. Both ToF sensors sharing the same address presents an issue when wanting to create a system that uses them simultaneously, and solutions to this problem are discussed below.
 
 ### Using Two Time of Flight Sensors
 
@@ -20,7 +20,7 @@ The ToF sensors communicate with the Artemis board through an I2C communication 
 
 The first method to provide stable communication to both of the ToF sensors doesn't require the devices to have unique addresses. Devices only need to have unique addresses on an I2C bus if the controller is trying to communicate with said device, and this communication can only take place if that sensor is powered. Therefore, if the controller powers down one of the sensors with duplicate addresses when trying to read from the other sensor, there will be no addressing issues. After collecting the data of interest, the controller can turn the powered off device back on. Both devices can stay on until the controller wants to communicate with one of them again, at which time it would turn the other device off.
 
-The second method requires you to turn a sensor off only once. During the setup of the program, if one of the sensors are turned off and can't communicate with the controller, then the program can actually change the address of the other identical device. By changing the address of one of the ToF sensors, there will no longer be a communication issue, and both devices can continuously be powered through the duration of the program.
+The second method requires you to turn a sensor off only once. During the setup of the program, if one of the sensors is turned off and can't communicate with the controller, then the program can actually change the address of the other identical device. By changing the address of one of the ToF sensors, there will no longer be a communication issue, and both devices can continuously be powered through the duration of the program.
 
 I chose to implement the second solution, as it requires only a little bit of computation at the setup of the program to fix the communication issue, as opposed to constantly turning devices off and on at a high pace.
 
@@ -80,7 +80,7 @@ The ToF sensor comes with two available sensing modes: short distance and long d
 
 The short distance sensing mode can be more accurate, as it is discretizing a smaller allowable range of data. However, this accuracy is only applicable for distances close to the sensor, meaning that the sensor may miss important data coming from obstacles or objects that are outside of its range of accurate detecting. This can cause systems using the short distance method to not be able to plan much in advance to avoid obstacles, and they will need to be able to adapt to data faster as they will have to get physically closer to objects to accurately detect them.
 
-The long distance sensing mode has a larger range, allowing systems using it to quickly react to onjects that are farther away from it. This could be good for my car robot because it could detect obstacles or walls sooner. However, this increased range corresponds with a less accurate measurement, and any increased error in measurement could have negative effects on the state estimation and controls of the robot. Additionally, ranging over a longer distance means that it would take more time to make measurements, slowing down the sampling rate of the sensor.
+The long distance sensing mode has a larger range, allowing systems using it to quickly react to objects that are farther away from it. This could be good for my car robot because it could detect obstacles or walls sooner. However, this increased range corresponds with a less accurate measurement, and any increased error in measurement could have negative effects on the state estimation and controls of the robot. Additionally, ranging over a longer distance means that it would take more time to make measurements, slowing down the sampling rate of the sensor.
 
 Since the goal of this class is to develop a fast robot car, speed and accuracy is paramount. The car has very fast dynamics, being able to change heading, direction, and speed incredibly quickly. Therefore, this system should be quick enough to adapt to rapidly incoming data about its environment, so I will use the short distance measurement mode for the ToF sensors. While this mode is only optimal in a smaller range of distances, it is more accurate and faster than the long distance mode.
 
@@ -151,6 +151,7 @@ Here is a graph of just the pitch and roll data:
 Here is a graph of just the distances measured by the ToF sensors:
 
 # <img src="Images/Lab 3/nice_tof_data.png" style="max-width:75%"/>
+
 
 
 
