@@ -10,7 +10,7 @@ layout: default
 
 ### Pelab
 
-For this all following labs, being able to program the Artemis board and communicate with it with our personal lapton via Bluetooth is vital. To do this, I updated my Arduino IDE and SparkFun Appollo3 boards manager.
+For all following labs, being able to program the Artemis board and communicate with it with our personal laptop via Bluetooth is vital. To do this, I updated my Arduino IDE and SparkFun Apollo boards manager.
 
 ### Task 1
 
@@ -18,7 +18,7 @@ I connected the Artemis board to my computer using the USB C output on my laptop
 
 ### Task 2
 
-To begin programming the board, I burned Blink, from Arduino's example programs, onto the Artemis board. This caused the blue LED on the board to turn on for one seconds and off for one second, repeatedly.
+To begin programming the board, I burned Blink, from Arduino's example programs, onto the Artemis board. This caused the blue LED on the board to turn on for one second and off for one second, repeatedly.
 
 <!-- This code to display the video was adapted from Chat GPT -->
 
@@ -30,7 +30,7 @@ To begin programming the board, I burned Blink, from Arduino's example programs,
 
 ### Task 3
 
-The purpose of this task was to become familiar with the boards serial interface. In Apollo3's Example4_Serial program, the Artemis board reads input from the serial monitor in the Arduino IDE when it is available and then prints the users input back out to the serial monitor. This was useful to better understand how to read and write to the serial monitor.
+The purpose of this task was to become familiar with the board's serial interface. In Apollo3's Example4_Serial program, the Artemis board reads input from the serial monitor in the Arduino IDE when it is available and then prints the user's input back out to the serial monitor. This was useful to better understand how to read and write to the serial monitor.
 
 To test this behavior, I sent the strings "Hello World" and "This is an ECHOOO...EChooo...Echooo...echooo......echoo" through the serial monitor, both of which the program echoed back to me.
 
@@ -74,21 +74,21 @@ Finally, I uploaded the Example1_MicrophoneOutput from the RedBoard Artemis Nano
 
 ### Pelab
 
-For the prelab, I updated the my version of Python, created a virtual environment to work in, and installed the necessary Python packages.
+For the prelab, I updated my version of Python, created a virtual environment to work in, and installed the necessary Python packages.
 
 ### Configuration
 
-In order to set up proper Bluetooth communication between my lapton and the board, I had to determine the MAC address of the board. as well as the UUID associated with my board, both of which are 
+In order to set up proper Bluetooth communication between my laptop and the board, I had to determine the MAC address of the board. as well as the UUID associated with my board, both of which are 
 
 # <img src="Images/Lab 1/lab1b_artemis_MAC_address.png" alt="Configuration, Image 1" style="width: 352px; height: 30px"/>
 
-Additionally, I needed to determine the UUID associated with the board, which  was done through my laptop using Jypeter Notebook.
+Additionally, I needed to determine the UUID associated with the board, which  was done through my laptop using Jupyter Notebook.
 
 # <img src="Images/Lab 1/lab1b_more_ble_stuff.png" alt="Configuration, Image 2" style="width: 373px; height: 91px"/>
 
 ### Task 1
 
-In order to send a string form my laptop to the Artemis board via a Bluetooth connection, an `ECHO` command needed to be implemented in the code burned onto the board. This command creates a list of `char` types, and then populates this list with the input from my laptop if there is input, otherwise the command does nothing. If there was an input, this input is then added to the `tx_estring_value` object, sandwiched between some formatting prefixes and suffixes. This is then printed to the serial monitor.
+In order to send a string from my laptop to the Artemis board via a Bluetooth connection, an `ECHO` command needed to be implemented in the code burned onto the board. This command creates a list of `char` types, and then populates this list with the input from my laptop if there is input, otherwise the command does nothing. If there was an input, this input is then added to the `tx_estring_value` object, sandwiched between some formatting prefixes and suffixes. This is then printed to the serial monitor.
 
 The printing of the received string is why this command is called "ECHO".
 
@@ -119,7 +119,7 @@ These images show what is sent and received by the Python program, and what is p
 
 ### Task 2
 
-Another command that needed to be implemented was `SEND_THREE_FLOATS`, which would allow me to send three seperate floats from my laptop to the Artemis board. Similar to the `ECHO` command, it had to be ensured that the user sent the necessary amount of parameters in order to for this command to work properly. Since this command expects three seperate floats, it needed to check to see if these parameters were provided. Given that they were, the local float variables would then be assigned the values of the floats provided form the laptop, and the board printed these floats to the serial monitor. 
+Another command that needed to be implemented was `SEND_THREE_FLOATS`, which would allow me to send three separate floats from my laptop to the Artemis board. Similar to the `ECHO` command, it had to be ensured that the user sent the necessary amount of parameters in order for this command to work properly. Since this command expects three separate floats, it needed to check to see if these parameters were provided. Given that they were, the local float variables would then be assigned the values of the floats provided from the laptop, and the board printed these floats to the serial monitor. 
 
 ```cpp
 case SEND_THREE_FLOATS:
@@ -170,15 +170,15 @@ case GET_TIME_MILLIS:
   break;
 ```
 
-The `T:` in the above command was used so that it was clear that any data following these characters coresponds to the timing. This was used in the Python program on my laptop to use the data set to it. In the serial monitor, this data looks like the last line in this image:
+The `T:` in the above command was used so that it was clear that any data following these characters corresponds to the timing. This was used in the Python program on my laptop to use the data set to it. In the serial monitor, this data looks like the last line in this image:
 
 # <img src="Images/Lab 1/lab1b_millis.png" alt="Task 3, Image 1" style="width: 391px; height: 165px"/>
 
 ### Task 4
 
-The above commands, and all other commands that prepare information to send to my laptop, are unable to send the data unless my laptop requests it. This can be cumbersome when we want data to be autonously sent from the Artemis board to the Python files, so a notification handler needed to be implemented in Python.
+The above commands, and all other commands that prepare information to send to my laptop, are unable to send the data unless my laptop requests it. This can be cumbersome when we want data to be autonomously sent from the Artemis board to the Python files, so a notification handler needs to be implemented in Python.
 
-In the notification handler I implemented, I had the function determine if there is time data within the received data by referencing the syntax of the time data discussed in the previous task. If there is time data, it is extracted and placed in an array for use else where in the Python program. Similarly, I extract any temperature data sent to the Python program from the Artemis board.
+In the notification handler I implemented, I had the function determine if there is time data within the received data by referencing the syntax of the time data discussed in the previous task. If there is time data, it is extracted and placed in an array for use elsewhere in the Python program. Similarly, I extract any temperature data sent to the Python program from the Artemis board.
 
 After creating the notification function, the notification handler needs to be started and tied to this function, as shown below. This allows the Python program to retrieve data from the Artemis board whenever the board transmits data, as opposed to only receiving data when the Python program requests it.
 
@@ -198,7 +198,7 @@ ble.start_notify(ble.uuid['RX_STRING'], start_string_notifications)
         
 ### Task 5
 
-As an alternative to sending a singular time stamp upon request, it could be useful for the user to receive timing information over a user-defined index of time. In order to do this, I impleneted a `LOOP_OVER_SET_TIME` command that returns the `millis()` for a user-defined amount of time. This was done by using the same logic as the `GET_TIME_MILLIS`, and repeating it until a user-specified amount of time has passed. The user specifies this amount of time in the Python files and sends in as part of the cocmmand.
+As an alternative to sending a singular time stamp upon request, it could be useful for the user to receive timing information over a user-defined index of time. In order to do this, I implemented a `LOOP_OVER_SET_TIME` command that returns the `millis()` for a user-defined amount of time. This was done by using the same logic as the `GET_TIME_MILLIS`, and repeating it until a user-specified amount of time has passed. The user specifies this amount of time in the Python files and sends it as part of the command.
 
 ```cpp
 case LOOP_OVER_SET_TIME:
@@ -224,7 +224,7 @@ case LOOP_OVER_SET_TIME:
     break;
 ```
 
-By sending this data to Python, I can then analyze how many data points are sent via Bluetooth over a certain number of time, allowing me to determing the data transfer rate. While the exact data transfer rate changes slightly between seperate calls to this command, it tends to be between 190 and 100 data points per second.
+By sending this data to Python, I can then analyze how many data points are sent via Bluetooth over a certain number of time, allowing me to determine the data transfer rate. While the exact data transfer rate changes slightly between separate calls to this command, it tends to be between 190 and 100 data points per second.
 
 # <img src="Images/Lab 1/lab1b_data_transfer_rate.png" alt="Task 5, Image 1" style="width: 846px; height: 374px"/>
 
@@ -243,7 +243,7 @@ case POPULATE_TIME_ARRAY:
     break;
 ```
 
-In order to send all of this data over to my laptop, I then implemented at `SEND_TIME_DATA` command. This command loops over the time array and individually sends each element in it to my laptop via Bluetooth. This is then stored in a list of time data in Python.
+In order to send all of this data over to my laptop, I then implemented the `SEND_TIME_DATA` command. This command loops over the time array and individually sends each element in it to my laptop via Bluetooth. This is then stored in a list of time data in Python.
 
 ```cpp
 case SEND_TIME_DATA:
@@ -287,17 +287,17 @@ case GET_TEMP_READINGS:
     break;
 ```
 
-This command then sends whatever data was in the time and temperature arrays at the time of the call to the command. The notification handler is able to parse this data by looking for the `T:` and `Temp:` prefixes of the data, as shown in **Task 4**. The Python program then seperates the data and places them into their respective arrays in the Python program without their prefixes.
+This command then sends whatever data was in the time and temperature arrays at the time of the call to the command. The notification handler is able to parse this data by looking for the `T:` and `Temp:` prefixes of the data, as shown in **Task 4**. The Python program then separates the data and places them into their respective arrays in the Python program without their prefixes.
 
 # <img src="Images/Lab 1/lab1b_display_timeTemp_serial.png" alt="Task 6, Image 1" style="width: 245px; height: 335px"/>
 
-The Python program interprets this data, searching for the `T:` and `Temp:` prefixes in order to find their corresponding data points and place them in seperate arrays.
+The Python program interprets this data, searching for the `T:` and `Temp:` prefixes in order to find their corresponding data points and place them in separate arrays.
 
 ### Task 8
 
-These two methods of data transfer, one continuous stream of data and bursts of large amounts of data, have different consequences. The continous transmission of data from the Artemis board is helpful for real time systems that require a constant feed of information about the state of the system, but it is also very slow compared to sending packets of data. While the second method is faster, the amount of time inbetween packets being sent could potentially be long. If the system in question is dynamic enough, it's possible that important information won't be able to get to the Python program fast enough in order to use that data appropriately.
+These two methods of data transfer, one continuous stream of data and bursts of large amounts of data, have different consequences. The continuous transmission of data from the Artemis board is helpful for real time systems that require a constant feed of information about the state of the system, but it is also very slow compared to sending packets of data. While the second method is faster, the amount of time in between packets being sent could potentially be long. If the system in question is dynamic enough, it's possible that important information won't be able to get to the Python program fast enough in order to use that data appropriately.
 
-Therefore, for systems that don't change very quickly or that don't need continous data input, then sending data in packets is better. However, if the system can change quickly or if continuous information is needed, then sending singular segments of data immediately after each other with no pause is better.
+Therefore, for systems that don't change very quickly or that don't need continuous data input, then sending data in packets is better. However, if the system can change quickly or if continuous information is needed, then sending singular segments of data immediately after each other with no pause is better.
 
 It is important to try to understand how quickly the packet sending method of data transmission can actually record data. For this, we can look at the amount of data in the packets and compare it to the amount of time to create the packet.
 
@@ -318,8 +318,11 @@ Or more succinctly:
 
 ## Discussion
 
-In this lab, I was able to establish a Bluetooth connection between my laptop and the Artemis board, send data to and from both devices, and implement a notification handler in Python in order to automatically recieve transmitted data from the Artemis board. I was also able to analyze the efficiency of continuously transmitting data from the Artemis and compare it with sending arrays of data at non-continuous intervals of time.
+In this lab, I was able to establish a Bluetooth connection between my laptop and the Artemis board, send data to and from both devices, and implement a notification handler in Python in order to automatically receive transmitted data from the Artemis board. I was also able to analyze the efficiency of continuously transmitting data from the Artemis and compare it with sending arrays of data at non-continuous intervals of time.
 
 ## Acknowledgements
 
 For aide in some of the formatting of this webpage, particularly with the images and videos, I consulted Chat GPT for advice on how to use Markdown correctly.
+
+
+
